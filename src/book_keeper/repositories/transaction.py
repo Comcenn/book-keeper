@@ -46,16 +46,21 @@ class TransactionRepository:
             .order_by(TransactionHeader.transaction_on.desc())
             .all()
         )
-    
+
     def get(self, transaction_id: int) -> TransactionHeader | None:
-        return (self.session.query(TransactionHeader)
+        return (
+            self.session.query(TransactionHeader)
             .options(
                 joinedload(TransactionHeader.account),
                 joinedload(TransactionHeader.lines),
                 with_loader_criteria(TransactionLine, lambda cls: cls.deleted == False),
             )
-            .filter(TransactionHeader.deleted == False, TransactionHeader.id == transaction_id)
-            .order_by(TransactionHeader.transaction_on.desc()).one_or_none()
+            .filter(
+                TransactionHeader.deleted == False,
+                TransactionHeader.id == transaction_id,
+            )
+            .order_by(TransactionHeader.transaction_on.desc())
+            .one_or_none()
         )
 
     def create(self, transaction_obj: Header) -> TransactionHeader:

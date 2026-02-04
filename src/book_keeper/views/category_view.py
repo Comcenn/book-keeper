@@ -33,8 +33,11 @@ class CategoryView(QWidget):
         layout.addWidget(self.table)
         self.setLayout(layout)
 
+        self.table.resizeColumnsToContents()
+
     def refresh(self) -> None:
         self.model.refresh(self.repo.all())
+        self.table.resizeColumnsToContents()
 
     @Slot()
     def add_category(self) -> None:

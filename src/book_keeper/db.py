@@ -10,5 +10,3 @@ db_path = db_dir / "bookkeeper.db"
 engine = create_engine(f"sqlite+pysqlite:///{db_path}", echo=True)
 
 sessionLocal = sessionmaker(bind=engine)
-
-

@@ -20,7 +20,9 @@ class TransactionView(QWidget):
         self.setLayout(layout)
 
         self.list_view = TransactionListView(transaction_repo)
-        self.detail_view = TransactionDetailView(transaction_repo, account_repo, category_repo)
+        self.detail_view = TransactionDetailView(
+            transaction_repo, account_repo, category_repo
+        )
 
         self.stack = QStackedWidget()
         self.stack.addWidget(self.list_view)

@@ -108,7 +108,7 @@ class TransactionDetailView(QWidget):
 
         self.tran_repo.create(header)
         self.saved.emit()
-    
+
     def load(self, header: TransactionHeader) -> None:
         pass
 

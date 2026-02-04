@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from ensurepip import bootstrap
 from importlib import resources
 import sys
 from PySide6.QtWidgets import (
@@ -12,6 +11,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
+from book_keeper.bootstrap import bootstrap
 from book_keeper.db import sessionLocal
 from book_keeper.repositories.account import AccountRepository
 from book_keeper.repositories.category import CategoryRepository
