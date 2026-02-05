@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from importlib import resources
 import sys
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMainWindow,
     QApplication,
@@ -9,6 +10,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QPushButton,
+    QButtonGroup,
 )
 
 from book_keeper.bootstrap import bootstrap
@@ -44,6 +46,12 @@ class MainWindow(QMainWindow):
         self.sidebar = QVBoxLayout()
         self.sidebar.setContentsMargins(0, 0, 0, 0)
         self.sidebar.setSpacing(10)
+        self.sidebar.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.btn_group = QButtonGroup(self)
+        self.btn_group.setExclusive(True)
+
+        self.view_for_btn: dict[QPushButton, QWidget] = {}
 
         layout.addLayout(self.sidebar)
 
@@ -56,26 +64,29 @@ class MainWindow(QMainWindow):
         self.view_stack.addWidget(accounts_view)
         self.view_stack.addWidget(category_view)
 
-        self.add_sidebar_button(
-            "Transactions", lambda: self.view_stack.setCurrentWidget(transactions_view)
-        )
+        self.add_sidebar_button("Transactions", transactions_view)
 
-        self.add_sidebar_button(
-            "Accounts", lambda: self.view_stack.setCurrentWidget(accounts_view)
-        )
-        self.add_sidebar_button(
-            "Categories", lambda: self.view_stack.setCurrentWidget(category_view)
-        )
+        self.add_sidebar_button("Accounts", accounts_view)
+        self.add_sidebar_button("Categories", category_view)
 
         self.setCentralWidget(main_container)
 
-    def add_sidebar_button(self, text: str, callback: Callable) -> None:
+        self.activate_view(transactions_view)
+
+    def activate_view(self, widget: QWidget) -> None:
+        self.view_stack.setCurrentWidget(widget)
+        for btn, view in self.view_for_btn.items():
+            btn.setChecked(view is widget)
+
+    def add_sidebar_button(self, text: str, widget: QWidget) -> None:
         btn = QPushButton(text)
         btn.setFixedWidth(150)
         btn.setObjectName("SidebarButton")
         btn.setCheckable(True)
-        btn.clicked.connect(callback)
+        btn.clicked.connect(lambda: self.activate_view(widget))
+        self.view_for_btn[btn] = widget
         self.sidebar.addWidget(btn)
+        self.btn_group.addButton(btn)
 
 
 if __name__ == "__main__":

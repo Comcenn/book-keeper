@@ -43,7 +43,9 @@ def upgrade() -> None:
     """Upgrade schema."""
     for name in CATAGORIES:
         op.execute(
-            sa.text("INSERT INTO categories (name, deleted) VALUES (:name, false)").bindparams(name=name)
+            sa.text(
+                "INSERT INTO categories (name, deleted) VALUES (:name, false)"
+            ).bindparams(name=name)
         )
 
 

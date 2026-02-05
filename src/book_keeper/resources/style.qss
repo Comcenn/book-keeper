@@ -53,6 +53,7 @@ QTableView::item {
 
 QLineEdit, QDateEdit, QComboBox, QTextEdit {
     background-color: #ffffff;
+    color: #000000;
     border: 1px solid #cccccc;
     border-radius: 4px;
     padding: 4px 6px;
@@ -97,6 +98,18 @@ QPushButton#SidebarButton:checked {
     background-color: #0078d4;
     color: white;
     border: none;
+}
+
+QPushButton#BackButton {
+    background: transparent;
+    border: none;
+    color: #4a90e2;
+    font-size: 14px;
+    padding: 4px;
+}
+
+QPushButton#BackButton:hover {
+    text-decoration: underline;
 }
 
 /* ---------------------------------------------------------

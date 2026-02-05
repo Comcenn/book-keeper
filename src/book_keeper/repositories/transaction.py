@@ -86,6 +86,39 @@ class TransactionRepository:
         self.session.add(header)
         self.session.commit()
         return header
+    
+    def update(self, header_id: int, new_header: Header):
+        """
+        Update an existing transaction header and replace its lines.
+        """
+        # 1. Fetch existing header
+        db_header = self.session.get(TransactionHeader, header_id)
+        if db_header is None:
+            raise ValueError(f"Transaction {header_id} not found")
+
+        # 2. Update header fields
+        db_header.item_description = new_header.item_description
+        db_header.transaction_on = new_header.transaction_on
+        db_header.transaction_type = new_header.transaction_type
+        db_header.total_paid_into_bank = new_header.total_paid_into_bank
+        db_header.reconciled = new_header.reconciled
+        db_header.account_id = new_header.account_id
+        db_header.notes = new_header.notes
+
+        # 3. Delete existing lines
+        db_header.lines.clear()
+
+        # 4. Insert new lines
+        for line in new_header.lines:
+            db_header.lines.append(
+                TransactionLine(
+                    amount=line.amount,
+                    category_id=line.category_id,
+                )
+            )
+
+        # 5. Commit
+        self.session.commit()
 
     def _validate_lines_payload(self, lines: List[Line]) -> None:
         if not lines:
