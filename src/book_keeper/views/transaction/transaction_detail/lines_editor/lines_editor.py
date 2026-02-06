@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QHBoxLayout, QPushButton, QDialog, QMessageBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QHBoxLayout, QPushButton, QDialog, QMessageBox, QHeaderView
 
 from book_keeper.repositories.transaction import Line
 from book_keeper.views.dialogs.line_edit_dialog import LineEditDialog
@@ -15,8 +15,14 @@ class LinesEditor(QWidget):
         layout = QVBoxLayout(self)
 
         self.table = QTableView()
+        self.table.setAlternatingRowColors(True)
         self.model = LineModel(categories)
         self.table.setModel(self.model)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch) # category
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents) # amount
+        self.table.setAlternatingRowColors(True)
+
 
         delegate = CategoryDelegate(categories)
         self.table.setItemDelegateForColumn(LineModel.COL_CATEGORY, delegate)

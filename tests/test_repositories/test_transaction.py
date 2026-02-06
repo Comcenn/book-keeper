@@ -2,7 +2,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 from pytest import fixture
 
-from book_keeper.repositories.account import AccountRepository
+from book_keeper.repositories.account import AccountRepository, AccountDto
 from book_keeper.repositories.category import CategoryRepository
 from book_keeper.repositories.transaction import (
     TransactionRepository,
@@ -17,7 +17,8 @@ def create_dependencies(db_session: Session) -> dict[str, int]:
     cat_repo = CategoryRepository(db_session)
     acc_repo = AccountRepository(db_session)
     cat = cat_repo.create("GiftAid")
-    acc = acc_repo.create(name="CURRENT", number="01675667")
+    acc = acc_repo.create(AccountDto(name="CURRENT", number="01675667"))
+    assert acc.id
     return {"cat_id": cat.id, "acc_id": acc.id}
 
 

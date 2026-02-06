@@ -1,4 +1,13 @@
 /* ---------------------------------------------------------
+   GLOBALS
+--------------------------------------------------------- */
+
+* {
+    font-size: 14px;
+    color: #000;
+}
+
+/* ---------------------------------------------------------
    TRANSACTION VIEW CONTAINERS
 --------------------------------------------------------- */
 
@@ -7,18 +16,17 @@
     padding: 16px;
 }
 
-#TransactionList {
-    background-color: #fafafa;
-    border: 1px solid #d0d0d0;
-    border-radius: 6px;
-    padding: 8px;
-}
-
+#TransactionList,
 #TransactionDetail {
-    background-color: #ffffff;
+    background-color: #fff;
     border: 1px solid #d0d0d0;
     border-radius: 6px;
     padding: 12px;
+}
+
+#TransactionList {
+    background-color: #fafafa;
+    padding: 8px;
 }
 
 /* ---------------------------------------------------------
@@ -30,11 +38,25 @@ QTableView {
     border: 1px solid #cccccc;
     border-radius: 6px;
     gridline-color: #e0e0e0;
-    font-size: 14px;
+
+    /* Alternating rows */
+    alternate-background-color: #f7f7f7;
+
+    /* Selection */
     selection-background-color: #0078d4;
     selection-color: #ffffff;
 }
 
+QTableView::item {
+    padding: 6px;
+    border-bottom: 1px solid #f0f0f0; /* subtle row separators */
+}
+
+QTableView::item:hover {
+    background-color: #e6f2ff;
+}
+
+/* Header */
 QHeaderView::section {
     background-color: #e6e6e6;
     padding: 6px;
@@ -43,25 +65,42 @@ QHeaderView::section {
     font-size: 13px;
 }
 
-QTableView::item {
-    padding: 6px;
+QHeaderView::section:hover {
+    background-color: #dcdcdc; /* subtle hover enhancement */
+}
+
+/* Remove Qt's default focus rectangle on table cells */
+QTableView::item:focus {
+    outline: none;
+    border: none;
+}
+
+QTableView::item:selected:active {
+    outline: none;
 }
 
 /* ---------------------------------------------------------
-   FORM FIELDS (Transaction Detail)
+   FORM FIELDS
 --------------------------------------------------------- */
 
-QLineEdit, QDateEdit, QComboBox, QTextEdit {
+QLineEdit,
+QDateEdit,
+QComboBox,
+QTextEdit {
     background-color: #ffffff;
-    color: #000000;
     border: 1px solid #cccccc;
     border-radius: 4px;
     padding: 4px 6px;
-    font-size: 14px;
 }
 
-QLineEdit:focus, QDateEdit:focus, QComboBox:focus, QTextEdit:focus {
+/* Scoped focus ring (fixes blue box on tables/buttons) */
+QLineEdit:focus,
+QDateEdit:focus,
+QComboBox:focus,
+QTextEdit:focus {
     border: 1px solid #0078d4;
+    outline: 2px solid #0078d4;
+    outline-offset: 1px;
 }
 
 /* ---------------------------------------------------------
@@ -73,7 +112,6 @@ QPushButton {
     color: white;
     border-radius: 4px;
     padding: 6px 12px;
-    font-size: 14px;
 }
 
 QPushButton:hover {
@@ -87,7 +125,7 @@ QPushButton:pressed {
 /* Sidebar buttons */
 QPushButton#SidebarButton {
     background-color: #f0f0f0;
-    color: #333333;
+    color: #333;
     border: 1px solid #cccccc;
     border-radius: 4px;
     padding: 8px;
@@ -100,6 +138,7 @@ QPushButton#SidebarButton:checked {
     border: none;
 }
 
+/* Back button */
 QPushButton#BackButton {
     background: transparent;
     border: none;
@@ -113,33 +152,36 @@ QPushButton#BackButton:hover {
 }
 
 /* ---------------------------------------------------------
-   SCROLLBARS (for table views)
+   SCROLLBARS
 --------------------------------------------------------- */
 
-QScrollBar:vertical {
-    width: 12px;
+QScrollBar:vertical,
+QScrollBar:horizontal {
     background: #f0f0f0;
 }
 
-QScrollBar::handle:vertical {
-    background: #cccccc;
-    border-radius: 6px;
-}
-
-QScrollBar::handle:vertical:hover {
-    background: #b3b3b3;
+QScrollBar:vertical {
+    width: 12px;
 }
 
 QScrollBar:horizontal {
     height: 12px;
-    background: #f0f0f0;
 }
 
+QScrollBar::handle:vertical,
 QScrollBar::handle:horizontal {
     background: #cccccc;
     border-radius: 6px;
 }
 
+QScrollBar::handle:vertical:hover,
 QScrollBar::handle:horizontal:hover {
     background: #b3b3b3;
+}
+
+QScrollBar::add-line,
+QScrollBar::sub-line {
+    width: 0;
+    height: 0;
+    background: none;
 }

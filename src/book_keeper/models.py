@@ -1,6 +1,6 @@
 import datetime
 from typing import List
-from sqlalchemy import ForeignKey, func
+from sqlalchemy import ForeignKey, func, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -41,7 +41,7 @@ class TransactionHeader(IdMixin, TimestampMixin, SoftDeleteMixin, Base):
     transaction_type: Mapped[str]
     total: Mapped[int]
     total_paid_into_bank: Mapped[int]
-    reconciled: Mapped[bool]
+    reconciled: Mapped[bool] = mapped_column(server_default=text("0"), default=False)
     notes: Mapped[str]
     account_id = mapped_column(ForeignKey("accounts.id"))
 

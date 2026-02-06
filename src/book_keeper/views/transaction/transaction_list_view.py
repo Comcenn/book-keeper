@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QPushButton, QHeaderView
 from PySide6.QtCore import Signal, QModelIndex
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 
@@ -16,6 +16,7 @@ class TransactionListView(QWidget):
         layout = QVBoxLayout(self)
 
         self.table = QTableView()
+        self.table.setAlternatingRowColors(True)
         layout.addWidget(self.table)
 
         self.new_btn = QPushButton("New Transaction")
@@ -44,8 +45,21 @@ class TransactionListView(QWidget):
             model.setItem(row, 7, QStandardItem(h.notes))
 
         self.table.setModel(model)
+        self._configure_columns()
         self.table.resizeColumnsToContents()
 
     def _row_clicked(self, index: QModelIndex) -> None:
         header = self._headers[index.row()]
         self.transaction_selected.emit(header.id)
+
+    def _configure_columns(self) -> None:
+        header = self.table.horizontalHeader()
+
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)
+
+        for col in [0, 1, 3, 4, 5, 6]:
+            header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+
+        self.table.setHorizontalScrollMode(QTableView.ScrollMode.ScrollPerPixel)
+        self.table.setVerticalScrollMode(QTableView.ScrollMode.ScrollPerPixel)
