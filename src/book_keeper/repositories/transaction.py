@@ -1,7 +1,10 @@
-from dataclasses import dataclass
+from __future__ import annotations
+
 from datetime import date
 from enum import StrEnum
 from typing import List
+
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, joinedload, with_loader_criteria
 
 from book_keeper.models import TransactionHeader, TransactionLine
@@ -12,30 +15,30 @@ class TransactionType(StrEnum):
     PAYMENT = "PAYMENT"
 
 
-@dataclass
-class Line:
-    amount: int
+class LineDto(BaseModel):
+    id: int | None = None
+    amount: int = Field(..., ge=0)
     category_id: int
 
 
-@dataclass
-class Header:
+class HeaderDto(BaseModel):
+    id: int | None = None
     item_description: str
     transaction_on: date
     transaction_type: TransactionType
-    total_paid_into_bank: int
-    reconciled: bool
+    total_paid_into_bank: int = Field(..., ge=0)
+    reconciled: bool = False
     account_id: int
-    notes: str
-    lines: list[Line]
+    notes: str = ""
+    lines: List[LineDto]
 
 
 class TransactionRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def list(self) -> list[TransactionHeader]:
-        return (
+    def list(self) -> list[HeaderDto]:
+        headers = (
             self.session.query(TransactionHeader)
             .options(
                 joinedload(TransactionHeader.account),
@@ -46,9 +49,10 @@ class TransactionRepository:
             .order_by(TransactionHeader.transaction_on.desc())
             .all()
         )
+        return [self._to_dto(h) for h in headers]
 
-    def get(self, transaction_id: int) -> TransactionHeader | None:
-        return (
+    def get(self, transaction_id: int) -> HeaderDto | None:
+        header = (
             self.session.query(TransactionHeader)
             .options(
                 joinedload(TransactionHeader.account),
@@ -59,72 +63,100 @@ class TransactionRepository:
                 TransactionHeader.deleted == False,
                 TransactionHeader.id == transaction_id,
             )
-            .order_by(TransactionHeader.transaction_on.desc())
             .one_or_none()
         )
+        return self._to_dto(header) if header else None
 
-    def create(self, transaction_obj: Header) -> TransactionHeader:
-        lines = transaction_obj.lines
-        self._validate_lines_payload(lines)
+    def create(self, dto: HeaderDto) -> HeaderDto:
+        self._validate_lines(dto.lines)
 
         header = TransactionHeader(
-            item_description=transaction_obj.item_description,
-            transaction_on=transaction_obj.transaction_on,
-            transaction_type=str(transaction_obj.transaction_type),
-            total=sum(line.amount for line in transaction_obj.lines),
-            total_paid_into_bank=transaction_obj.total_paid_into_bank,
-            reconciled=transaction_obj.reconciled,
-            notes=transaction_obj.notes,
-            account_id=transaction_obj.account_id,
+            item_description=dto.item_description,
+            transaction_on=dto.transaction_on,
+            transaction_type=dto.transaction_type.value,
+            total=sum(line.amount for line in dto.lines),
+            total_paid_into_bank=dto.total_paid_into_bank,
+            reconciled=dto.reconciled,
+            notes=dto.notes,
+            account_id=dto.account_id,
         )
 
-        for line in lines:
+        for line in dto.lines:
             header.lines.append(
-                TransactionLine(amount=line.amount, category_id=line.category_id)
-            )
-
-        self.session.add(header)
-        self.session.commit()
-        return header
-    
-    def update(self, header_id: int, new_header: Header):
-        """
-        Update an existing transaction header and replace its lines.
-        """
-        # 1. Fetch existing header
-        db_header = self.session.get(TransactionHeader, header_id)
-        if db_header is None:
-            raise ValueError(f"Transaction {header_id} not found")
-
-        # 2. Update header fields
-        db_header.item_description = new_header.item_description
-        db_header.transaction_on = new_header.transaction_on
-        db_header.transaction_type = new_header.transaction_type
-        db_header.total_paid_into_bank = new_header.total_paid_into_bank
-        db_header.reconciled = new_header.reconciled
-        db_header.account_id = new_header.account_id
-        db_header.notes = new_header.notes
-
-        # 3. Delete existing lines
-        db_header.lines.clear()
-
-        # 4. Insert new lines
-        for line in new_header.lines:
-            db_header.lines.append(
                 TransactionLine(
                     amount=line.amount,
                     category_id=line.category_id,
                 )
             )
 
-        # 5. Commit
+        self.session.add(header)
+        self.session.commit()
+        self.session.refresh(header)
+        return self._to_dto(header)
+
+    def update(self, dto: HeaderDto) -> HeaderDto:
+        if dto.id is None:
+            raise ValueError("HeaderDto.id is required for update")
+
+        self._validate_lines(dto.lines)
+
+        header = self.session.get(TransactionHeader, dto.id)
+        if not header or header.deleted:
+            raise ValueError(f"Transaction {dto.id} not found")
+
+        header.item_description = dto.item_description
+        header.transaction_on = dto.transaction_on
+        header.transaction_type = dto.transaction_type.value
+        header.total_paid_into_bank = dto.total_paid_into_bank
+        header.reconciled = dto.reconciled
+        header.account_id = dto.account_id
+        header.notes = dto.notes
+        header.total = sum(line.amount for line in dto.lines)
+
+        header.lines.clear()
+        for line in dto.lines:
+            header.lines.append(
+                TransactionLine(
+                    amount=line.amount,
+                    category_id=line.category_id,
+                )
+            )
+
+        self.session.commit()
+        self.session.refresh(header)
+        return self._to_dto(header)
+
+    def soft_delete(self, transaction_id: int) -> None:
+        header = self.session.get(TransactionHeader, transaction_id)
+        if not header or header.deleted:
+            return
+        header.deleted = True
         self.session.commit()
 
-    def _validate_lines_payload(self, lines: List[Line]) -> None:
+    def _validate_lines(self, lines: List[LineDto]) -> None:
         if not lines:
-            raise ValueError("Invalid Transaction requires at least one line.")
+            raise ValueError("Transaction requires at least one line.")
         for line in lines:
-            if line.amount < 0:
-                raise ValueError("Amount cannot be negative.")
             if line.category_id is None:
-                raise ValueError("Line is missing Category.")
+                raise ValueError("Line is missing category_id.")
+
+    def _to_dto(self, header: TransactionHeader) -> HeaderDto:
+        return HeaderDto(
+            id=header.id,
+            item_description=header.item_description,
+            transaction_on=header.transaction_on,
+            transaction_type=TransactionType(header.transaction_type),
+            total_paid_into_bank=header.total_paid_into_bank,
+            reconciled=header.reconciled,
+            account_id=header.account_id,
+            notes=header.notes,
+            lines=[
+                LineDto(
+                    id=line.id,
+                    amount=line.amount,
+                    category_id=line.category_id,
+                )
+                for line in header.lines
+                if not line.deleted
+            ],
+        )

@@ -1,5 +1,4 @@
-
-from typing import Annotated 
+from typing import Annotated
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
 
@@ -19,10 +18,17 @@ class AccountRepository:
         self.session = session
 
     def all(self) -> list[AccountDto]:
-        return [AccountDto(id=acc.id, name=acc.name, number=acc.number) for acc in self.session.query(Account).filter_by(deleted=False).all()]
-    
+        return [
+            AccountDto(id=acc.id, name=acc.name, number=acc.number)
+            for acc in self.session.query(Account).filter_by(deleted=False).all()
+        ]
+
     def get(self, account_id: int) -> AccountDto | None:
-        acc = self.session.query(Account).filter(Account.id == account_id, Account.deleted == False).one_or_none()
+        acc = (
+            self.session.query(Account)
+            .filter(Account.id == account_id, Account.deleted == False)
+            .one_or_none()
+        )
         if not acc:
             return None
         return AccountDto(id=acc.id, name=acc.name, number=acc.number)

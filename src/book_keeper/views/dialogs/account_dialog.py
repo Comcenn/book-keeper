@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton, QVBoxLayout, QLabel
 
-from book_keeper.models import Account
+from book_keeper.repositories.account import AccountDto
 
 
 class AccountDialog(QDialog):
-    def __init__(self, account: Account | None = None):
+    def __init__(self, account: AccountDto | None = None):
         super().__init__()
         self.setWindowTitle("Account")
 

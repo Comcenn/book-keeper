@@ -7,9 +7,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal
 
 from book_keeper.models import TransactionHeader
-from book_keeper.repositories.account import AccountRepository
 from book_keeper.repositories.category import CategoryRepository
 from book_keeper.repositories.transaction import TransactionRepository
+from book_keeper.views.models.account_table import AccountTableModel
+from book_keeper.views.models.category_table import CategoryTableModel
 
 from .header_form import HeaderForm
 from .lines_editor.lines_editor import LinesEditor
@@ -22,14 +23,14 @@ class TransactionDetailView(QWidget):
     def __init__(
         self,
         transaction_repo: TransactionRepository,
-        account_repo: AccountRepository,
-        category_repo: CategoryRepository,
+        account_model: AccountTableModel,
+        category_model: CategoryTableModel,
     ) -> None:
         super().__init__()
 
         self.tran_repo = transaction_repo
-        self.acc_repo = account_repo
-        self.cat_repo = category_repo
+        self.acc_model = account_model
+        self.cat_model = category_model
 
         layout = QVBoxLayout(self)
 
@@ -47,14 +48,13 @@ class TransactionDetailView(QWidget):
         # --------------------------------------------------------------
         # Header form (new modular component)
         # --------------------------------------------------------------
-        self.header_form = HeaderForm(self.acc_repo)
+        self.header_form = HeaderForm(self.acc_model)
         layout.addWidget(self.header_form)
 
         # --------------------------------------------------------------
         # Lines editor
         # --------------------------------------------------------------
-        categories = {c.id: c.name for c in self.cat_repo.all()}
-        self.lines_editor = LinesEditor(categories)
+        self.lines_editor = LinesEditor(category_model)
         layout.addWidget(self.lines_editor)
 
         # --------------------------------------------------------------

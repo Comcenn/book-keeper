@@ -1,3 +1,4 @@
+from typing import cast
 from PySide6.QtWidgets import (
     QWidget,
     QFormLayout,
@@ -8,9 +9,10 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QDate
 
+from book_keeper.repositories.account import AccountDto
 from book_keeper.repositories.transaction import Header, TransactionType
 from book_keeper.models import TransactionHeader
-from book_keeper.repositories.account import AccountRepository
+from book_keeper.views.models.account_table import AccountRole, AccountTableModel
 
 
 class HeaderForm(QWidget):
@@ -19,10 +21,10 @@ class HeaderForm(QWidget):
     Responsible only for UI + mapping to/from Header dataclass (except lines).
     """
 
-    def __init__(self, account_repo: AccountRepository, parent=None):
+    def __init__(self, account_model: AccountTableModel, parent=None):
         super().__init__(parent)
 
-        self.account_repo = account_repo
+        self.acc_model = account_model
 
         form = QFormLayout(self)
 
@@ -44,8 +46,7 @@ class HeaderForm(QWidget):
 
         # Account
         self.account_combo = QComboBox()
-        for acc in self.account_repo.all():
-            self.account_combo.addItem(acc.name, acc.id)
+        self.account_combo.setModel(self.acc_model)
         form.addRow("Account", self.account_combo)
 
         # Reconciled
@@ -113,13 +114,21 @@ class HeaderForm(QWidget):
         except ValueError:
             total_paid = 0  # You may want validation later
 
+        account_dto: AccountDto = cast(
+            AccountDto, self.account_combo.currentData(AccountRole)
+        )
+
+        account_id = account_dto.id
+
+        assert account_id
+
         return Header(
             item_description=self.desc_edit.text(),
             transaction_on=self.date_edit.date().toPython(),
             transaction_type=self.type_combo.currentData(),
             total_paid_into_bank=total_paid,
             reconciled=self.reconciled_check.isChecked(),
-            account_id=self.account_combo.currentData(),
+            account_id=account_id,
             notes=self.notes_edit.text(),
             lines=lines,
         )

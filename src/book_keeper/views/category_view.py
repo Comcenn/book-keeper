@@ -1,18 +1,16 @@
 from PySide6.QtWidgets import QTableView, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
 from PySide6.QtCore import Slot
 
-from book_keeper.repositories.category import CategoryRepository
 from book_keeper.views.dialogs.category_dialog import CategoryDialog
 from book_keeper.views.models.category_table import CategoryTableModel
 
 
 class CategoryView(QWidget):
-    def __init__(self, repo: CategoryRepository) -> None:
+    def __init__(self, category_model: CategoryTableModel) -> None:
         super().__init__()
-        self.repo = repo
+        self.model = category_model
 
         self.table = QTableView()
-        self.model = CategoryTableModel(self.repo.all())
         self.table.setModel(self.model)
 
         add_btn = QPushButton("Add")
@@ -35,17 +33,13 @@ class CategoryView(QWidget):
 
         self.table.resizeColumnsToContents()
 
-    def refresh(self) -> None:
-        self.model.refresh(self.repo.all())
-        self.table.resizeColumnsToContents()
-
     @Slot()
     def add_category(self) -> None:
         dlg = CategoryDialog()
         if dlg.exec():
             name = dlg.get_data()
-            self.repo.create(name)
-            self.refresh()
+            self.model.add_category(name)
+            self.table.resizeColumnsToContents()
 
     @Slot()
     def edit_category(self) -> None:
@@ -53,18 +47,18 @@ class CategoryView(QWidget):
         if not index.isValid():
             return
 
-        account = self.model.categories[index.row()]
+        account = self.model.category_at(index.row())
         dlg = CategoryDialog()
         if dlg.exec():
             name = dlg.get_data()
-            self.repo.update(account, name)
-            self.refresh()
+            dto = account.model_copy(update={"name": name})
+            self.model.update_category(index.row(), dto)
+            self.table.resizeColumnsToContents()
 
     @Slot()
     def delete_category(self) -> None:
         index = self.table.currentIndex()
         if not index.isValid():
             return
-        account = self.model.categories[index.row()]
-        self.repo.delete(account)
-        self.refresh()
+        self.model.delete_category(index.row())
+        self.table.resizeColumnsToContents()

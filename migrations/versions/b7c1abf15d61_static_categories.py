@@ -36,7 +36,7 @@ CATAGORIES = [
     "TRANSFER",
     "INSURANCE",
     "DONATIONS",
-    "GIFT_AID"
+    "GIFT_AID",
 ]
 
 

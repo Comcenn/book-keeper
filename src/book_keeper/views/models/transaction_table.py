@@ -17,17 +17,22 @@ class TransactionTableModel(QAbstractTableModel):
     def __init__(self, transactions: list[TransactionHeader]) -> None:
         super().__init__()
         self._transactions = transactions
-    
+
     def rowCount(self, /, parent=None) -> int:
         return len(self._transactions)
-    
+
     def columnCount(self, /, parent=None) -> int:
         return 8
-    
-    def data(self, index: QModelIndex | QPersistentModelIndex, /, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+
+    def data(
+        self,
+        index: QModelIndex | QPersistentModelIndex,
+        /,
+        role: int = Qt.ItemDataRole.DisplayRole,
+    ) -> Any:
         if not index.isValid():
             return None
-        
+
         transaction = self._transactions[index.row()]
 
         if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
@@ -50,11 +55,28 @@ class TransactionTableModel(QAbstractTableModel):
                     return transaction.notes
                 case _:
                     raise ValueError("Column number mismatch")
-        
-        return None
-    
-    def headerData(self, section: int, orientation: Qt.Orientation, /, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
-        if role != Qt.ItemDataRole.DisplayRole or orientation != Qt.Orientation.Horizontal:
-            return None
-        return ["Date", "Type", "Description", "Account", "Total", "Total Paid Into Bank", "Reconciled", "Notes"][section]
 
+        return None
+
+    def headerData(
+        self,
+        section: int,
+        orientation: Qt.Orientation,
+        /,
+        role: int = Qt.ItemDataRole.DisplayRole,
+    ) -> Any:
+        if (
+            role != Qt.ItemDataRole.DisplayRole
+            or orientation != Qt.Orientation.Horizontal
+        ):
+            return None
+        return [
+            "Date",
+            "Type",
+            "Description",
+            "Account",
+            "Total",
+            "Total Paid Into Bank",
+            "Reconciled",
+            "Notes",
+        ][section]

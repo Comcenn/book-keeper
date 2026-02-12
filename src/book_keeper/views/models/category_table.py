@@ -1,17 +1,17 @@
 from typing import Any
-from PySide6 import QtCore
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
 
-from book_keeper.models import Category
+from book_keeper.repositories.category import CategoryDto, CategoryRepository
 
 
-class CategoryTableModel(QtCore.QAbstractTableModel):
-    def __init__(self, accounts: list[Category]) -> None:
+CategoryRole = Qt.ItemDataRole.UserRole + 2
+
+
+class CategoryTableModel(QAbstractTableModel):
+    def __init__(self, category_repo: CategoryRepository) -> None:
         super().__init__()
-        self._categories = accounts
-
-    @property
-    def categories(self) -> list[Category]:
-        return self._categories
+        self._repo = category_repo
+        self._categories = self._repo.all()
 
     def rowCount(self, parent=None) -> int:
         return len(self._categories)
@@ -21,32 +21,67 @@ class CategoryTableModel(QtCore.QAbstractTableModel):
 
     def data(
         self,
-        index: QtCore.QModelIndex | QtCore.QPersistentModelIndex,
-        role: int = QtCore.Qt.ItemDataRole.DisplayRole,
-    ) -> str | None:
+        index: QModelIndex | QPersistentModelIndex,
+        role: int = Qt.ItemDataRole.DisplayRole,
+    ) -> Any:
         if not index.isValid():
             return None
 
-        account = self._categories[index.row()]
+        category = self._categories[index.row()]
 
-        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
-                return account.name
+                return category.name
+        
+        if role == CategoryRole:
+            return category.id
 
     def headerData(
         self,
         section: int,
-        orientation: QtCore.Qt.Orientation,
+        orientation: Qt.Orientation,
         /,
-        role: int = QtCore.Qt.ItemDataRole.DisplayRole,
+        role: int = Qt.ItemDataRole.DisplayRole,
     ) -> Any:
         if (
-            role == QtCore.Qt.ItemDataRole.DisplayRole
-            and orientation == QtCore.Qt.Orientation.Horizontal
+            role == Qt.ItemDataRole.DisplayRole
+            and orientation == Qt.Orientation.Horizontal
         ):
             return ["Name"][section]
+    
+    def name_from_id(self, cat_id: int) -> str | None:
+        for dto in self._categories:
+            if dto.id == cat_id:
+                return dto.name
+        return None
+    
+    def add_category(self, name: str) -> None:
+        dto = CategoryDto(name=name)
+        created = self._repo.create(dto)
 
-    def refresh(self, categories: list[Category]) -> None:
+        row = len(self._categories)
+        self.beginInsertRows(QModelIndex(), row, row)
+        self._categories.append(created)
+        self.endInsertRows()
+    
+    def category_at(self, row: int) -> CategoryDto:
+        return self._categories[row]
+    
+    def update_category(self, row, updated: CategoryDto) -> None:
+        saved_dto = self._repo.update(updated)
+        self._categories[row] = saved_dto
+        top_left = self.index(row, 0)
+        bottom_right = self.index(row, self.columnCount() - 1)
+        self.dataChanged.emit(top_left, bottom_right)
+    
+    def delete_category(self, row: int) -> None:
+        dto = self._categories[row]
+        self._repo.delete(dto)
+        self.beginRemoveRows(QModelIndex(), row, row)
+        del self._categories[row]
+        self.endRemoveRows()
+
+    def reload(self) -> None:
         self.beginResetModel()
-        self._categories = categories
+        self._categories = self._repo.all()
         self.endResetModel()

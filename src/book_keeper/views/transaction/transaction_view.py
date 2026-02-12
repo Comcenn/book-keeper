@@ -1,9 +1,12 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QStackedWidget
 
-from book_keeper.repositories.account import AccountRepository
 from book_keeper.repositories.category import CategoryRepository
 from book_keeper.repositories.transaction import TransactionRepository
-from book_keeper.views.transaction.transaction_detail.transaction_detail_view import TransactionDetailView
+from book_keeper.views.models.account_table import AccountTableModel
+from book_keeper.views.models.category_table import CategoryTableModel
+from book_keeper.views.transaction.transaction_detail.transaction_detail_view import (
+    TransactionDetailView,
+)
 from book_keeper.views.transaction.transaction_list_view import TransactionListView
 
 
@@ -11,8 +14,8 @@ class TransactionView(QWidget):
     def __init__(
         self,
         transaction_repo: TransactionRepository,
-        account_repo: AccountRepository,
-        category_repo: CategoryRepository,
+        account_model: AccountTableModel,
+        category_model: CategoryTableModel,
     ) -> None:
         super().__init__()
 
@@ -20,7 +23,7 @@ class TransactionView(QWidget):
 
         self.list_view = TransactionListView(transaction_repo)
         self.detail_view = TransactionDetailView(
-            transaction_repo, account_repo, category_repo
+            transaction_repo, account_model, category_model
         )
 
         self.stack = QStackedWidget()

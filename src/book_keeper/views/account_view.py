@@ -48,7 +48,9 @@ class AccountView(QWidget):
         dlg = AccountDialog()
         if dlg.exec():
             name, number = dlg.get_data()
-            new_account = account.model_copy(update={"id": account.id, "name": name, "number": number})
+            new_account = account.model_copy(
+                update={"id": account.id, "name": name, "number": number}
+            )
             self.model.update_account(index.row(), new_account)
 
     @Slot()

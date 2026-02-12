@@ -1,16 +1,26 @@
 from decimal import Decimal, InvalidOperation
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QFormLayout, QComboBox, QLineEdit, QDialogButtonBox
+from PySide6.QtWidgets import (
+    QDialog,
+    QVBoxLayout,
+    QFormLayout,
+    QComboBox,
+    QLineEdit,
+    QDialogButtonBox,
+)
 from PySide6.QtCore import Qt
 
 from book_keeper.repositories.transaction import Line
+from book_keeper.views.models.category_table import CategoryRole, CategoryTableModel
 
 
 class LineEditDialog(QDialog):
-    def __init__(self, categories: dict[int, str], line: Line | None = None, parent=None) -> None:
+    def __init__(
+        self, category_model: CategoryTableModel, line: Line | None = None, parent=None
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Line")
 
-        self._categories = categories
+        self._cat_model = category_model
         self._line = line
 
         layout = QVBoxLayout(self)
@@ -18,8 +28,7 @@ class LineEditDialog(QDialog):
         layout.addLayout(form)
 
         self.category_combo = QComboBox()
-        for cat_id, name in categories.items():
-            self.category_combo.addItem(name, cat_id)
+        self.category_combo.setModel(self._cat_model)
         form.addRow("Category", self.category_combo)
 
         self.amount_edit = QLineEdit()
@@ -28,7 +37,7 @@ class LineEditDialog(QDialog):
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             orientation=Qt.Orientation.Horizontal,
-            parent=self
+            parent=self,
         )
         layout.addWidget(buttons)
 
@@ -37,15 +46,15 @@ class LineEditDialog(QDialog):
 
         if line is not None:
             self._load_line(line)
-    
+
     def _load_line(self, line: Line) -> None:
         idx = self.category_combo.findData(line.category_id)
         if idx >= 0:
             self.category_combo.setCurrentIndex(idx)
         self.amount_edit.setText(f"{line.amount / 100:.2f}")
-    
+
     def get_line(self) -> Line | None:
-        category_id = self.category_combo.currentData()
+        category_id = self.category_combo.currentData(CategoryRole)
         amount_text = self.amount_edit.text().strip()
         try:
             dec = Decimal(amount_text)

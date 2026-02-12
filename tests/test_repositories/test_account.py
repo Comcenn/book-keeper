@@ -19,9 +19,13 @@ def test_repository_creates_an_account(account_repo: AccountRepository) -> None:
 
 
 def test_repository_returns_all_accounts(account_repo: AccountRepository) -> None:
-    test_data = [AccountDto(name=f"test_acc_{i}", number=f"011{i}TEST{i}") for i in range(6)]
+    test_data = [
+        AccountDto(name=f"test_acc_{i}", number=f"011{i}TEST{i}") for i in range(6)
+    ]
     acc_list = [account_repo.create(acc) for acc in test_data]
-    assert list(map(lambda acc: (acc.name, acc.number),acc_list)) == list(map(lambda acc: (acc.name, acc.number) ,test_data))
+    assert list(map(lambda acc: (acc.name, acc.number), acc_list)) == list(
+        map(lambda acc: (acc.name, acc.number), test_data)
+    )
 
 
 def test_repository_returns_empty_list_when_no_accounts_exist(

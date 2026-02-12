@@ -32,7 +32,18 @@ class TransactionListView(QWidget):
         self._headers = headers
 
         model = QStandardItemModel(len(headers), 8)
-        model.setHorizontalHeaderLabels(["Date", "Type", "Description", "Account", "Total", "Total Paid Into Bank", "Reconciled", "Notes"])
+        model.setHorizontalHeaderLabels(
+            [
+                "Date",
+                "Type",
+                "Description",
+                "Account",
+                "Total",
+                "Total Paid Into Bank",
+                "Reconciled",
+                "Notes",
+            ]
+        )
 
         for row, h in enumerate(headers):
             model.setItem(row, 0, QStandardItem(h.transaction_on.strftime("%Y-%m-%d")))

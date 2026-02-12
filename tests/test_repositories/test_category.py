@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from pytest import fixture
 
-from book_keeper.repositories.category import CategoryRepository
+from book_keeper.repositories.category import CategoryDto, CategoryRepository
 
 
 @fixture
@@ -11,16 +11,15 @@ def category_repo(db_session: Session) -> CategoryRepository:
 
 def test_repository_creates_an_account(category_repo: CategoryRepository) -> None:
     name = "test_cat"
-    cat = category_repo.create(name)
+    dto = CategoryDto(name=name)
+    cat = category_repo.create(dto)
     assert cat.name == name, "Does not match name"
 
 
 def test_repository_returns_all_accounts(category_repo: CategoryRepository) -> None:
-    test_data = [f"test_cat_{i}" for i in range(6)]
-    for name in test_data:
-        category_repo.create(name)
-    cat_list = [cat.name for cat in category_repo.all()]
-    assert cat_list == test_data
+    test_data = [CategoryDto(name=f"test_cat_{i}") for i in range(6)]
+    cat_list = [category_repo.create(cat) for cat in test_data]
+    assert [cat.name for cat in cat_list] == [test.name for test in test_data]
 
 
 def test_repository_returns_empty_list_when_no_accounts_exist(
@@ -33,14 +32,17 @@ def test_repository_returns_empty_list_when_no_accounts_exist(
 def test_repository_updates_an_account(category_repo: CategoryRepository) -> None:
     name = "orig_test_cat"
     new_name = "new_test_cat"
-    cat = category_repo.create(name)
+    dto = CategoryDto(name=name)
+    cat = category_repo.create(dto)
     assert cat.name == name
-    category_repo.update(cat, new_name)
-    assert cat.name == new_name
+    update_dto = cat.model_copy(update={"name": new_name})
+    updated_cat = category_repo.update(update_dto)
+    assert updated_cat.name == new_name
 
 
 def test_repository_soft_deletes_an_account(category_repo: CategoryRepository) -> None:
-    name = "test_name"
-    cat = category_repo.create(name)
+    dto = CategoryDto(name="test_name")
+    cat = category_repo.create(dto)
+    assert cat.id
     category_repo.delete(cat)
-    assert cat.deleted
+    assert not category_repo.get(cat.id)

@@ -4,6 +4,9 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelInd
 from book_keeper.repositories.account import AccountRepository, AccountDto
 
 
+AccountRole = Qt.ItemDataRole.UserRole + 1
+
+
 class AccountTableModel(QAbstractTableModel):
     def __init__(self, account_repo: AccountRepository) -> None:
         super().__init__()
@@ -20,7 +23,7 @@ class AccountTableModel(QAbstractTableModel):
         self,
         index: QModelIndex | QPersistentModelIndex,
         role: int = Qt.ItemDataRole.DisplayRole,
-    ) -> str | None:
+    ) -> Any:
         if not index.isValid():
             return None
 
@@ -31,6 +34,9 @@ class AccountTableModel(QAbstractTableModel):
                 return account.name
             if index.column() == 1:
                 return account.number
+
+        if role == AccountRole:
+            return account
 
     def headerData(
         self,
@@ -53,27 +59,25 @@ class AccountTableModel(QAbstractTableModel):
         self.beginInsertRows(QModelIndex(), row, row)
         self._accounts.append(created)
         self.endInsertRows()
-    
+
     def account_at(self, row: int) -> AccountDto:
         return self._accounts[row]
-    
+
     def update_account(self, row: int, updated: AccountDto) -> None:
         saved_dto = self.acc_repo.update(updated)
         self._accounts[row] = saved_dto
         top_left = self.index(row, 0)
         bottom_right = self.index(row, self.columnCount() - 1)
         self.dataChanged.emit(top_left, bottom_right)
-    
+
     def delete_account(self, row: int) -> None:
         dto = self._accounts[row]
         self.acc_repo.delete(dto)
         self.beginRemoveRows(QModelIndex(), row, row)
         del self._accounts[row]
         self.endRemoveRows()
-    
+
     def reload(self) -> None:
         self.beginResetModel()
         self._accounts = self.acc_repo.all()
         self.endResetModel()
-
-
