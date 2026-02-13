@@ -50,6 +50,12 @@ class AccountTableModel(QAbstractTableModel):
             and orientation == Qt.Orientation.Horizontal
         ):
             return ["Name", "Number"][section]
+    
+    def name_from_id(self, account_id: int) -> str | None:
+        for acc in self._accounts:
+            if acc.id == account_id:
+                return acc.name
+        return None
 
     def add_account(self, name: str, number: str) -> None:
         dto = AccountDto(name=name, number=number)

@@ -27,6 +27,7 @@ class HeaderDto(BaseModel):
     transaction_on: date
     transaction_type: TransactionType
     total_paid_into_bank: int = Field(..., ge=0)
+    total: int | None
     reconciled: bool = False
     account_id: int
     notes: str = ""
@@ -126,7 +127,7 @@ class TransactionRepository:
         self.session.refresh(header)
         return self._to_dto(header)
 
-    def soft_delete(self, transaction_id: int) -> None:
+    def delete(self, transaction_id: int) -> None:
         header = self.session.get(TransactionHeader, transaction_id)
         if not header or header.deleted:
             return
@@ -147,6 +148,7 @@ class TransactionRepository:
             transaction_on=header.transaction_on,
             transaction_type=TransactionType(header.transaction_type),
             total_paid_into_bank=header.total_paid_into_bank,
+            total=header.total,
             reconciled=header.reconciled,
             account_id=header.account_id,
             notes=header.notes,

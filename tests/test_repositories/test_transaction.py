@@ -96,7 +96,7 @@ def test_repository_list_returns_only_non_deleted(
     model2 = repo.create(dto2)
 
     # Soft delete the second one
-    repo.soft_delete(model2.id)
+    repo.delete(model2.id)
 
     # Act
     results = repo.list()

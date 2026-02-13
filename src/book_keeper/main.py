@@ -22,6 +22,7 @@ from book_keeper.views.account_view import AccountView
 from book_keeper.views.category_view import CategoryView
 from book_keeper.views.models.account_table import AccountTableModel
 from book_keeper.views.models.category_table import CategoryTableModel
+from book_keeper.views.models.transaction_table import TransactionTableModel
 from book_keeper.views.transaction.transaction_view import TransactionView
 
 
@@ -44,6 +45,7 @@ class MainWindow(QMainWindow):
 
         acc_model = AccountTableModel(acc_repo)
         cat_model = CategoryTableModel(cat_repo)
+        tran_model = TransactionTableModel(transaction_repository=tran_repo, account_model=acc_model)
 
         main_container = QWidget()
         layout = QHBoxLayout(main_container)
@@ -62,7 +64,7 @@ class MainWindow(QMainWindow):
 
         self.view_stack = QStackedWidget()
         layout.addWidget(self.view_stack, stretch=1)
-        transactions_view = TransactionView(tran_repo, acc_model, cat_model)
+        transactions_view = TransactionView(tran_model, acc_model, cat_model)
         accounts_view = AccountView(acc_model)
         category_view = CategoryView(cat_model)
         self.view_stack.addWidget(transactions_view)

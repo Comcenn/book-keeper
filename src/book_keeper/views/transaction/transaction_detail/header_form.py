@@ -1,4 +1,5 @@
-from typing import cast
+from typing import cast, Optional
+
 from PySide6.QtWidgets import (
     QWidget,
     QFormLayout,
@@ -10,21 +11,21 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QDate
 
 from book_keeper.repositories.account import AccountDto
-from book_keeper.repositories.transaction import Header, TransactionType
-from book_keeper.models import TransactionHeader
+from book_keeper.repositories.transaction import HeaderDto, TransactionType
 from book_keeper.views.models.account_table import AccountRole, AccountTableModel
 
 
 class HeaderForm(QWidget):
     """
     A self-contained widget that manages the transaction header fields.
-    Responsible only for UI + mapping to/from Header dataclass (except lines).
+    Responsible only for UI + mapping to/from HeaderDto (except lines).
     """
 
     def __init__(self, account_model: AccountTableModel, parent=None):
         super().__init__(parent)
 
         self.acc_model = account_model
+        self._current_id: Optional[int] = None  # preserve ID for updates
 
         form = QFormLayout(self)
 
@@ -62,39 +63,37 @@ class HeaderForm(QWidget):
         self.notes_edit = QLineEdit()
         form.addRow("Notes", self.notes_edit)
 
-        self._current_header: TransactionHeader | None = None
-
     # --------------------------------------------------------------
     # Public API
     # --------------------------------------------------------------
 
-    def load_header(self, header: TransactionHeader) -> None:
-        """Populate the form from an existing TransactionHeader."""
-        self._current_header = header
+    def load_header(self, dto: HeaderDto) -> None:
+        """Populate the form from an existing HeaderDto."""
+        self._current_id = dto.id
 
-        self.desc_edit.setText(header.item_description)
-        self.date_edit.setDate(QDate(header.transaction_on))
-        self.notes_edit.setText(header.notes or "")
+        self.desc_edit.setText(dto.item_description)
+        self.date_edit.setDate(QDate(dto.transaction_on))
+        self.notes_edit.setText(dto.notes or "")
 
         # Transaction type
-        idx = self.type_combo.findData(header.transaction_type)
+        idx = self.type_combo.findData(dto.transaction_type)
         if idx >= 0:
             self.type_combo.setCurrentIndex(idx)
 
         # Account
-        acc_idx = self.account_combo.findData(header.account_id)
+        acc_idx = self.account_combo.findData(dto.account_id, role=AccountRole)
         if acc_idx >= 0:
             self.account_combo.setCurrentIndex(acc_idx)
 
         # Reconciled
-        self.reconciled_check.setChecked(bool(header.reconciled))
+        self.reconciled_check.setChecked(dto.reconciled)
 
-        # Total paid into bank (user-editable)
-        self.total_edit.setText(str(header.total_paid_into_bank))
+        # Total paid into bank
+        self.total_edit.setText(str(dto.total_paid_into_bank))
 
     def clear(self) -> None:
         """Reset the form for a new transaction."""
-        self._current_header = None
+        self._current_id = None
 
         self.desc_edit.clear()
         self.notes_edit.clear()
@@ -106,23 +105,21 @@ class HeaderForm(QWidget):
 
     def to_header(self, lines):
         """
-        Convert the form fields into a Header dataclass.
-        The caller provides the line items.
+        Convert the form fields into a HeaderDto.
+        The caller provides the line DTOs.
         """
         try:
             total_paid = int(self.total_edit.text() or 0)
         except ValueError:
-            total_paid = 0  # You may want validation later
+            total_paid = 0  # TODO: validation hook
 
         account_dto: AccountDto = cast(
             AccountDto, self.account_combo.currentData(AccountRole)
         )
-
         account_id = account_dto.id
 
-        assert account_id
-
-        return Header(
+        return HeaderDto(
+            id=self._current_id,
             item_description=self.desc_edit.text(),
             transaction_on=self.date_edit.date().toPython(),
             transaction_type=self.type_combo.currentData(),
@@ -130,5 +127,6 @@ class HeaderForm(QWidget):
             reconciled=self.reconciled_check.isChecked(),
             account_id=account_id,
             notes=self.notes_edit.text(),
+            total=None,  # repository will compute this
             lines=lines,
         )

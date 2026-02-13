@@ -9,13 +9,13 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 
-from book_keeper.repositories.transaction import Line
+from book_keeper.repositories.transaction import LineDto
 from book_keeper.views.models.category_table import CategoryRole, CategoryTableModel
 
 
 class LineEditDialog(QDialog):
     def __init__(
-        self, category_model: CategoryTableModel, line: Line | None = None, parent=None
+        self, category_model: CategoryTableModel, line: LineDto | None = None, parent=None
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Edit Line")
@@ -47,13 +47,13 @@ class LineEditDialog(QDialog):
         if line is not None:
             self._load_line(line)
 
-    def _load_line(self, line: Line) -> None:
+    def _load_line(self, line: LineDto) -> None:
         idx = self.category_combo.findData(line.category_id)
         if idx >= 0:
             self.category_combo.setCurrentIndex(idx)
         self.amount_edit.setText(f"{line.amount / 100:.2f}")
 
-    def get_line(self) -> Line | None:
+    def get_line(self) -> LineDto | None:
         category_id = self.category_combo.currentData(CategoryRole)
         amount_text = self.amount_edit.text().strip()
         try:
@@ -61,4 +61,4 @@ class LineEditDialog(QDialog):
             amount_int = int(dec * 100)
         except (InvalidOperation, ValueError):
             return None
-        return Line(amount=amount_int, category_id=category_id)
+        return LineDto(amount=amount_int, category_id=category_id)

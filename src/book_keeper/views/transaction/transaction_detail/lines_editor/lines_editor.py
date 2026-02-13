@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
 )
 
-from book_keeper.repositories.transaction import Line
+from book_keeper.repositories.transaction import LineDto
 from book_keeper.views.dialogs.line_edit_dialog import LineEditDialog
 from book_keeper.views.models.category_table import CategoryTableModel
 from book_keeper.views.models.line_table import LineModel
@@ -51,10 +51,10 @@ class LinesEditor(QWidget):
         self.edit_btn.clicked.connect(self._edit_line)
         self.remove_btn.clicked.connect(self._remove_line)
 
-    def get_lines(self) -> list[Line]:
+    def get_lines(self) -> list[LineDto]:
         return self.model.get_lines()
 
-    def set_lines(self, lines: list[Line]) -> None:
+    def set_lines(self, lines: list[LineDto]) -> None:
         self.model.set_lines(lines)
 
     def _add_line(self) -> None:

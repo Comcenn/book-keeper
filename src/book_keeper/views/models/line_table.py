@@ -1,7 +1,7 @@
 from typing import Any
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
 
-from book_keeper.repositories.transaction import Line
+from book_keeper.repositories.transaction import LineDto
 from book_keeper.views.models.category_table import CategoryTableModel
 
 
@@ -9,7 +9,7 @@ class LineModel(QAbstractTableModel):
     COL_CATEGORY = 0
     COL_AMOUNT = 1
 
-    def __init__(self, category_model: CategoryTableModel, lines: list[Line] | None = None) -> None:
+    def __init__(self, category_model: CategoryTableModel, lines: list[LineDto] | None = None) -> None:
         super().__init__()
         self._cat_model = category_model
         self._lines = list(lines) if lines else []
@@ -47,7 +47,7 @@ class LineModel(QAbstractTableModel):
     def add_line(self, category_id: int, amount: int = 0) -> None:
         row = len(self._lines)
         self.beginInsertRows(QModelIndex(), row, row)
-        self._lines.append(Line(amount=amount, category_id=category_id))
+        self._lines.append(LineDto(amount=amount, category_id=category_id))
         self.endInsertRows()
 
     def remove_line(self, row: int) -> None:
@@ -56,18 +56,18 @@ class LineModel(QAbstractTableModel):
             del self._lines[row]
             self.endRemoveRows()
 
-    def get_lines(self) -> list[Line]:
+    def get_lines(self) -> list[LineDto]:
         return list(self._lines)
 
-    def get_line(self, row: int) -> Line:
+    def get_line(self, row: int) -> LineDto:
         return self._lines[row]
 
-    def set_lines(self, lines: list[Line]) -> None:
+    def set_lines(self, lines: list[LineDto]) -> None:
         self.beginResetModel()
         self._lines = list(lines)
         self.endResetModel()
 
-    def update_line(self, row: int, new_line: Line) -> None:
+    def update_line(self, row: int, new_line: LineDto) -> None:
         if 0 <= row < len(self._lines):
             self._lines[row] = new_line
             top_left = self.index(row, 0)
